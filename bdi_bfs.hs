@@ -57,7 +57,7 @@ simple_get_children node = map simple_get_child (zip (repeat node) (take (length
 bidirectional list = gen_bidi (Root list :< Empty) Map.empty (Root goal :< Empty) Map.empty simple_get_children
     where goal = (List.sort list)
 
---bidi = bidirectional
+bidi list = bidirectional list
 
 test = [2,7,3,1]
 
