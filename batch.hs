@@ -9,7 +9,8 @@ pattern Empty   <- (Seq.viewl -> Seq.EmptyL)  where Empty = Seq.empty
 pattern x :< xs <- (Seq.viewl -> x Seq.:< xs) where (:<)  = (Seq.<|) 
 pattern xs :> x <- (Seq.viewr -> xs Seq.:> x) where (:>)  = (Seq.|>) 
 
-data Node a = Branch {element :: a, parent :: (Node a), action :: Int} | Root {element :: a} 
+data Node a = Branch {state :: a, parent :: (Node a), action :: Int} |
+     Root {state :: a} 
 
 flip_at xs n = reverse ( take n xs ) ++ (drop n xs)
 
@@ -17,11 +18,11 @@ visualize xs [] = [xs]
 visualize xs (f:fs) = xs : (visualize ( flip_at xs f) fs)
 
 visit (queue, closed) node
-    | Map.member (element node) closed = (queue, closed)
+    | Map.member (state node) closed = (queue, closed)
     | otherwise = (queue', closed')
     where
         queue' = (queue :> node)
-        closed' = Map.insert (element node) node closed
+        closed' = Map.insert (state node) node closed
 
 solution2 (Root _) = [] 
 solution2 (Branch _ parent action) = action:(solution2 parent)
@@ -36,14 +37,14 @@ rel_order_list x =  indexed_sort (indexed_sort x)
 
 --batch_bfs _ Empty _ _ = []
 batch_bfs goal (node :< queue) closed get_children
-    | goal == (element node) = ((solution2 node), queue, closed)
+    | goal == (state node) = ((solution2 node), queue, closed)
     | otherwise = (batch_bfs goal queue' closed' get_children)
     where
         (queue', closed') = List.foldl' visit (queue, closed) (get_children node) 
 
-simple_get_child (node, action) = Branch (flip_at (element node) action) node action
+simple_get_child (node, action) = Branch (flip_at (state node) action) node action
 
-simple_get_children node = map simple_get_child (zip (repeat node) (take (length (element node)) [2..]) )
+simple_get_children node = map simple_get_child (zip (repeat node) (take (length (state node)) [2..]) )
 
 batch2 [] _ _ = []
 batch2 (x:xs) queue closed 
