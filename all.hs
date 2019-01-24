@@ -65,7 +65,7 @@ breadth_first_search is_goal (node :< queue) closed successors
     | otherwise = (breadth_first_search is_goal queue' closed' successors)
     where
         (queue', closed') = List.foldl' visit (queue, closed) node_successors
-        node_successors = List.map (uncurry (Branch node)) (successors (state node))
+        node_successors = List.map (uncurry $ Branch node) (successors $ state node)
 
 bidi_solution front rear = sol_front ++ sol_rear
     where 
