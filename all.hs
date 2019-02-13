@@ -1,5 +1,5 @@
 {-# LANGUAGE ViewPatterns, PatternSynonyms #-}
--- Ilias 
+-- Ilias Tsatiris (sdi1500162)
 -- Kostas Alexopoulos (sdi1600002)
 
 import Data.Ord
