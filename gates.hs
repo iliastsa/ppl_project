@@ -1,3 +1,14 @@
+import qualified Data.List as List
+
+
+indexed_sort selector xs = 
+    map fst 
+    $ List.sortOn snd 
+    $ zip [1..]
+    $ map snd 
+    $ List.sortOn fst 
+    $ zip (map selector xs) [1..]
+
 
 abs_diff a b = abs (a - b)
 
@@ -30,7 +41,7 @@ flip_1 xs item =
         [(index xs item) - 1] 
 
 flip_3 xs min max
-    | min_i < max_i = flip_3 xs max min
+    | min_i > max_i = flip_3 xs max min
     | otherwise = [min_i, (min_i - 1), max_i, (max_i - min_i)]
     where
         min_i = index xs min
@@ -164,7 +175,8 @@ pre_gates list n
 
         -- next_step flips = foldl flip_at list flips
         -- next_step flips = flips
-gates xs = foldl flip_at xs (pre_gates xs (length xs))
+gates xs = pre_gates xs_indexed (length xs)
+    where xs_indexed = indexed_sort id xs
     -- where
     --     comp = pre_gates xs (length xs)
     --     (top_head, top_tail) = block_at 
