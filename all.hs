@@ -143,6 +143,18 @@ bfs xs = breadth_first_search (== xs) ( Seq.singleton (Root goal) ) Map.empty si
 bidirectional xs = bidi_breadth_first ( Seq.singleton (Root xs) ) Map.empty ( Seq.singleton (Root goal) ) Map.empty simple_successors
     where goal = List.sort xs
 
+test_succesors x 
+    | x == "A" = map child ["B", "F"]
+    | x == "B" = map child ["C", "A"]
+    | x == "C" = map child ["D", "B"]
+    | x == "D" = map child ["E", "C"]
+    | x == "F" = map child ["G", "A"]
+    | x == "E" = map child ["D", "G"]
+    | x == "G" = map child ["E", "F"]
+    where child next = (next, x ++ next)
+test_dibi xs = bidi_breadth_first ( Seq.singleton (Root xs) ) Map.empty ( Seq.singleton (Root goal) ) Map.empty test_succesors
+    where goal = "E"
+
 batch xs = batch_search rel_xs (Seq.singleton (Root goal)) Map.empty simple_successors
     where 
         goal = [1..length (head xs)]

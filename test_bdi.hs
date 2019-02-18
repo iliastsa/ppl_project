@@ -98,6 +98,31 @@ bidi_breadth_first (front_node :< front_queue) front_closed (rear_node :< rear_q
 -- TESTING NEW BIDI IMPLEMENTATION
 
 
+-- test_succesors x 
+--     | x == "A" = map child ["B", "F", "E"]
+--     | x == "B" = map child ["C", "A"]
+--     | x == "C" = map child ["D", "B"]
+--     | x == "D" = map child ["E", "C"]
+--     | x == "F" = map child ["A", "F1"]
+--     | x == "F1" = map child ["F", "G1"]
+--     | x == "G1" = map child ["G", "F1"]
+--     | x == "E" = map child ["D", "G"]
+--     | x == "G" = map child ["G1", "E"]
+--     where child next = (next, x ++ next)
+test_succesors x 
+    | x == "A" = map child ["B", "F"]
+    | x == "B" = map child ["C", "A"]
+    | x == "C" = map child ["D", "B"]
+    | x == "D" = map child ["E", "C"]
+    | x == "F" = map child ["A", "G"]
+    | x == "G" = map child ["G", "E"]
+    | x == "E" = map child ["D", "G"]
+    where child next = (next, x ++ next)
+
+test_dibi xs = test_bidi_2 [Root xs] (Map.singleton xs (Root xs)) [Root goal] (Map.singleton goal (Root goal)) test_succesors
+    where goal = "E"
+
+
 find_first (x:xs) map 
     | Map.member (state x) map = (x, map_get (state x) map)
     | otherwise = find_first xs map
@@ -109,31 +134,51 @@ bidi_visit (queue, closed) node
         closed' = Map.insert (state node) node closed
 
 test_bidi front_queue front_closed rear_queue rear_closed successors
+
+    | in_closed front_closed rear_queue = bidi_solution r1' f1'
+    | in_closed rear_closed front_queue = bidi_solution r2' f2'
+
     | in_front rear_queue  = bidi_solution r1 f1
-    | in_rear  front_queue = bidi_solution r2 f2
+    | in_rear front_queue = bidi_solution r2 f2
+
     | otherwise = test_bidi front_queue' front_closed' rear_queue' rear_closed' successors
     where
-        in_front nodes = List.foldl' (\found node -> if found then found else Map.member (state node) front_closed) False nodes
-        in_rear nodes  = List.foldl' (\found node -> if found then found else Map.member (state node) rear_closed) False nodes
-        (f1, r1) = find_first rear_queue front_closed
-        (r2, f2) = find_first front_queue rear_closed
+        in_closed closed nodes = List.foldl' (\found node -> if found then found else Map.member (state node) closed) False nodes
+
+        in_front = in_closed front_closed'
+        in_rear = in_closed rear_closed'
+        
+        -- step 1        
+        (f1, r1) = find_first rear_queue front_closed'
+        (r2, f2) = find_first front_queue rear_closed'
+
+        -- step 2
+        (f1', r1') = find_first rear_queue front_closed
+        (r2', f2') = find_first front_queue rear_closed
+        
         (rear_queue', rear_closed') = List.foldl' bidi_visit ([], rear_closed) (all_successors rear_queue)
         (front_queue', front_closed') = List.foldl' bidi_visit ([], front_closed) (all_successors front_queue)
+        
+        all_successors nodes = List.concatMap node_successors nodes
+        node_successors node = List.map (uncurry $ Branch node) (successors $ state node)
+
+test_bidi_2 front_queue front_closed rear_queue rear_closed successors
+
+    | in_closed front_closed' rear_queue = bidi_solution r f
+
+    | otherwise = reverse $ test_bidi_2 rear_queue rear_closed front_queue' front_closed' successors
+    where
+        in_closed closed nodes = List.foldl' (\found node -> if found then found else Map.member (state node) closed) False nodes
+        (f, r) = find_first rear_queue front_closed'
+
+        (front_queue', front_closed') = List.foldl' bidi_visit ([], front_closed) (all_successors front_queue)
+        
         all_successors nodes = List.concatMap node_successors nodes
         node_successors node = List.map (uncurry $ Branch node) (successors $ state node)
 
 
-
-bidirectional_t xs = test_bidi [Root xs] Map.empty [Root goal] Map.empty simple_successors
+bidirectional_t xs = test_bidi_2 [Root xs] (Map.singleton xs (Root xs)) [Root goal] (Map.singleton goal (Root goal)) simple_successors
     where goal = List.sort xs
-
-
-
-
-
-
-
-
 
 
 
